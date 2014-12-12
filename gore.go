@@ -26,6 +26,18 @@ func newErr(text string) error {
 	}
 }
 
+// Location struct describes a place call
+type Location struct {
+	FuncName string
+	FileName string
+	Line     int
+}
+
+type Stack struct {
+	Location
+	Elements []string
+}
+
 // Err struct implement of error
 type Err struct {
 	FuncName string
