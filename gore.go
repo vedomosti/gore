@@ -63,7 +63,7 @@ type ContextElements []interface{}
 func (ce ContextElements) String() string {
 	var buf bytes.Buffer
 	for _, v := range ce {
-		buf.WriteString(fmt.Sprintf("%v ", v))
+		buf.WriteString(fmt.Sprintf("%+v ", v))
 	}
 
 	return buf.String()
