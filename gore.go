@@ -2,12 +2,18 @@
 package gore
 
 import (
-	"bytes"
 	"fmt"
 	"path/filepath"
 	"runtime"
 	"strconv"
 )
+
+// Err struct implement of error
+type Err struct {
+	Msg     string
+	Caller  *Caller
+	Context []*Context
+}
 
 // New returns an error with caller details
 func New(text string) error {
@@ -22,69 +28,8 @@ func Newf(text string, args ...interface{}) error {
 func newErr(text string) error {
 	return &Err{
 		Msg:    text,
-		Caller: newCallerInfo(2),
+		Caller: NewCaller(2),
 	}
-}
-
-// CallerInfo struct store info about caller
-type CallerInfo struct {
-	FuncName string
-	FileName string
-	Line     int
-}
-
-// String representation for CallerInfo object
-func (ci *CallerInfo) String() string {
-	var buf bytes.Buffer
-	buf.WriteString("[")
-	buf.WriteString(filepath.Base(ci.FileName))
-	buf.WriteString(":")
-	buf.WriteString(strconv.Itoa(ci.Line))
-	buf.WriteString(" ")
-	buf.WriteString(filepath.Base(ci.FuncName))
-	buf.WriteString("]")
-
-	return buf.String()
-}
-
-func newCallerInfo(lvl int) *CallerInfo {
-	pc, fn, line, _ := runtime.Caller(lvl + 1)
-	return &CallerInfo{
-		FuncName: runtime.FuncForPC(pc).Name(),
-		FileName: fn,
-		Line:     line,
-	}
-}
-
-// ContextElements slice store context value
-type ContextElements []interface{}
-
-// String representation for ContextElements object
-func (ce ContextElements) String() string {
-	var buf bytes.Buffer
-	for _, v := range ce {
-		buf.WriteString(fmt.Sprintf("%+v ", v))
-	}
-
-	return buf.String()
-}
-
-// Context struct store info about call context
-type Context struct {
-	Caller   *CallerInfo
-	Elements ContextElements
-}
-
-// String representation of Context object
-func (c *Context) String() string {
-	return c.Caller.String() + " " + c.Elements.String()
-}
-
-// Err struct implement of error
-type Err struct {
-	Msg     string
-	Caller  *CallerInfo
-	Context []*Context
 }
 
 // Error return string for Err object
@@ -92,11 +37,39 @@ func (err *Err) Error() string {
 	return err.Msg
 }
 
-func (err *Err) appendContext(args ...interface{}) {
-	err.Context = append(err.Context, &Context{
-		Caller:   newCallerInfo(2),
-		Elements: args,
-	})
+// Caller struct store info about caller
+type Caller struct {
+	FuncName string
+	FileName string
+	Line     int
+}
+
+func NewCaller(lvl int) *Caller {
+	pc, fn, line, _ := runtime.Caller(lvl + 1)
+	return &Caller{
+		FuncName: runtime.FuncForPC(pc).Name(),
+		FileName: fn,
+		Line:     line,
+	}
+}
+
+func (caller *Caller) ShortFileName() string {
+	return filepath.Base(caller.FileName) + ":" + strconv.Itoa(caller.Line)
+}
+
+func (caller *Caller) ShortFuncName() string {
+	return filepath.Base(caller.FuncName)
+}
+
+// Context struct store info about call context
+type Context struct {
+	Caller *Caller
+	Msg    string
+}
+
+// String representation of Context object
+func (c *Context) String() string {
+	return c.Msg
 }
 
 // Append method append Context to given Err object
@@ -105,5 +78,20 @@ func Append(e error, args ...interface{}) {
 	if !ok {
 		return
 	}
-	err.appendContext(args...)
+	appendContext(err, fmt.Sprint(args...))
+}
+
+func Appendf(e error, format string, args ...interface{}) {
+	err, ok := e.(*Err)
+	if !ok {
+		return
+	}
+	appendContext(err, fmt.Sprintf(format, args...))
+}
+
+func appendContext(err *Err, msg string) {
+	err.Context = append(err.Context, &Context{
+		Caller: NewCaller(2),
+		Msg:    msg,
+	})
 }
