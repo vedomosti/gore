@@ -16,16 +16,16 @@ type Err struct {
 }
 
 // New returns an error with caller details
-func New(text string) error {
+func New(text string) *Err {
 	return newErr(text)
 }
 
 // Newf returns an error with formatting message and caller details
-func Newf(text string, args ...interface{}) error {
+func Newf(text string, args ...interface{}) *Err {
 	return newErr(fmt.Sprintf(text, args...))
 }
 
-func newErr(text string) error {
+func newErr(text string) *Err {
 	return &Err{
 		Msg:    text,
 		Caller: NewCaller(2),
@@ -75,9 +75,11 @@ func (c *Context) String() string {
 // Append method append Context to given Err object
 func Append(e error, args ...interface{}) *Err {
 	err, ok := e.(*Err)
-	if ok {
-		appendContext(err, fmt.Sprint(args...))
+	if !ok {
+		err = New(e.Error())
 	}
+
+	appendContext(err, fmt.Sprint(args...))
 
 	return err
 }
@@ -89,9 +91,11 @@ func (err *Err) Append(args ...interface{}) *Err {
 
 func Appendf(e error, format string, args ...interface{}) *Err {
 	err, ok := e.(*Err)
-	if ok {
-		appendContext(err, fmt.Sprintf(format, args...))
+	if !ok {
+		err = New(e.Error())
 	}
+
+	appendContext(err, fmt.Sprintf(format, args...))
 
 	return err
 }
