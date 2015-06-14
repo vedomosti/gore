@@ -73,7 +73,7 @@ func (c *Context) String() string {
 }
 
 // Append method append Context to given Err object
-func Append(e error, args ...interface{}) error {
+func Append(e error, args ...interface{}) *Err {
 	err, ok := e.(*Err)
 	if ok {
 		appendContext(err, fmt.Sprint(args...))
@@ -82,12 +82,22 @@ func Append(e error, args ...interface{}) error {
 	return err
 }
 
-func Appendf(e error, format string, args ...interface{}) error {
+func (err *Err) Append(args ...interface{}) *Err {
+	appendContext(err, fmt.Sprint(args...))
+	return err
+}
+
+func Appendf(e error, format string, args ...interface{}) *Err {
 	err, ok := e.(*Err)
 	if ok {
 		appendContext(err, fmt.Sprintf(format, args...))
 	}
 
+	return err
+}
+
+func (err *Err) Appendf(format string, args ...interface{}) *Err {
+	appendContext(err, fmt.Sprintf(format, args...))
 	return err
 }
 

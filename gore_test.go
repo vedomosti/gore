@@ -21,7 +21,11 @@ func TestErr(t *testing.T) {
 	Append(err, "foo")
 	assert.Equal(err.(*Err).Context[0].String(), "foo")
 
-	Appendf(err, "foo: %s", "bar")
+	gerr := Appendf(err, "foo: %s", "bar")
 	assert.Equal(err.(*Err).Context[1].String(), "foo: bar")
 	assert.NotNil(err.(*Err).Context[0].Caller)
+
+	gerr.Append("append1").Appendf("append%d", 2)
+	assert.Equal(gerr.Context[2].String(), "append1")
+	assert.Equal(gerr.Context[3].String(), "append2")
 }
