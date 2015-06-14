@@ -4,8 +4,8 @@
 
 ```go
 err := gore.New("hello")
-gore.Append("Some context message")
-gore.Appendf("Another formatted context massage %s", "for define this error")
+gore.Append(err, "Some context message")
+gore.Appendf(err, "Another formatted context massage %s", "for define this error")
 
 gerr := err.(*Err)
 log.Print(gerr.Caller.ShortFileName())
